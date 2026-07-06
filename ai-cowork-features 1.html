@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Cowork — Claude vs M365 Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:           #F8F7F3;
+    --surface:      #FFFFFF;
+    --surface-2:    #F2F0EB;
+    --border:       #E2DFD7;
+    --border-strong:#C6C2B8;
+    --text:         #18180F;
+    --text-2:       #68665C;
+    --text-3:       #9E9B93;
+
+    --claude:       #B84800;
+    --claude-mid:   #E05A10;
+    --claude-bg:    #FFF3EC;
+    --claude-bd:    #F5C4A6;
+    --claude-dot:   #F07540;
+
+    --ms:           #1252B5;
+    --ms-mid:       #2563EB;
+    --ms-bg:        #EDF2FF;
+    --ms-bd:        #BFCFFA;
+    --ms-dot:       #4F82E8;
+
+    --shared:       #177042;
+    --shared-mid:   #1D8C51;
+    --shared-bg:    #EDFBF3;
+    --shared-bd:    #9AE3C0;
+    --shared-dot:   #22C574;
+
+    --radius-sm:    4px;
+    --radius:       8px;
+    --radius-lg:    12px;
+    --radius-xl:    16px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  body { background: var(--bg); color: var(--text); line-height: 1.5; }
+
+  /* ── HERO ─────────────────────────────────────── */
+  .hero {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 32px;
+  }
+  .hero-inner { max-width: 960px; margin: 0 auto; }
+
+  .eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--text-3);
+    margin-bottom: 10px;
+  }
+  .hero h1 {
+    font-size: clamp(22px, 4vw, 32px); font-weight: 700;
+    line-height: 1.15; color: var(--text);
+    margin-bottom: 6px;
+  }
+  .hero-sub { font-size: 14px; color: var(--text-2); margin-bottom: 24px; }
+
+  /* DNA bar */
+  .dna-wrap { margin-bottom: 24px; }
+  .dna-label { font-size: 11px; color: var(--text-3); margin-bottom: 6px; }
+  .dna-bar {
+    display: flex; height: 8px; border-radius: 99px;
+    overflow: hidden; gap: 2px;
+  }
+  .dna-seg { border-radius: 99px; transition: filter .2s; cursor: default; }
+  .dna-seg:hover { filter: brightness(1.1); }
+  .dna-c  { background: var(--claude-mid); }
+  .dna-m  { background: var(--ms-mid); }
+  .dna-s  { background: var(--shared-mid); }
+
+  .dna-legend {
+    display: flex; gap: 18px; margin-top: 8px; flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-2);
+  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* stat chips */
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    border-radius: var(--radius); border: 1px solid var(--border);
+    padding: 8px 14px; background: var(--surface);
+  }
+  .stat-num { font-size: 20px; font-weight: 700; }
+  .stat-lbl { font-size: 11px; color: var(--text-2); line-height: 1.3; }
+  .stat-chip.c .stat-num { color: var(--claude); }
+  .stat-chip.m .stat-num { color: var(--ms); }
+  .stat-chip.s .stat-num { color: var(--shared); }
+  .stat-chip.t .stat-num { color: var(--text); }
+
+  /* ── TOOLBAR ──────────────────────────────────── */
+  .toolbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(248,247,243,.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+  }
+  .toolbar-inner {
+    max-width: 960px; margin: 0 auto;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+
+  .filter-group { display: flex; gap: 4px; }
+  .filter-btn {
+    border: 1px solid var(--border); background: var(--surface);
+    border-radius: var(--radius); padding: 5px 12px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    color: var(--text-2); transition: all .15s;
+  }
+  .filter-btn:hover { border-color: var(--border-strong); color: var(--text); }
+  .filter-btn.active { color: var(--surface); border-color: transparent; }
+  .filter-btn.active.all  { background: var(--text); }
+  .filter-btn.active.fc   { background: var(--claude); }
+  .filter-btn.active.fm   { background: var(--ms); }
+  .filter-btn.active.fs   { background: var(--shared); }
+
+  .search-wrap { flex: 1; min-width: 160px; position: relative; }
+  .search-wrap svg {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--text-3); pointer-events: none;
+  }
+  .search-inp {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 5px 10px 5px 32px;
+    font-size: 13px; background: var(--surface);
+    color: var(--text); font-family: inherit;
+    transition: border-color .15s;
+  }
+  .search-inp:focus { outline: none; border-color: var(--border-strong); }
+  .search-inp::placeholder { color: var(--text-3); }
+
+  .result-count {
+    font-size: 12px; color: var(--text-3);
+    white-space: nowrap; padding: 5px 4px;
+  }
+
+  /* ── MAIN ─────────────────────────────────────── */
+  .main { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+  /* ── CATEGORY ─────────────────────────────────── */
+  .category { margin-bottom: 32px; }
+  .cat-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .cat-icon {
+    width: 28px; height: 28px; border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .cat-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .cat-count {
+    font-size: 11px; color: var(--text-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 99px; padding: 1px 8px;
+    margin-left: auto;
+  }
+
+  /* ── FEATURE ROW ──────────────────────────────── */
+  .feat-row {
+    display: grid;
+    grid-template-columns: 20px 1fr auto auto;
+    gap: 0 12px;
+    align-items: start;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: background .12s, border-color .12s;
+    cursor: default;
+  }
+  .feat-row:hover {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  .feat-row[data-hidden="true"] { display: none; }
+
+  .feat-indicator {
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-top: 5px; flex-shrink: 0;
+  }
+  .feat-row.pc .feat-indicator  { background: var(--claude-dot); }
+  .feat-row.pm .feat-indicator  { background: var(--ms-dot); }
+  .feat-row.ps .feat-indicator  { background: var(--shared-dot); }
+
+  .feat-body { min-width: 0; }
+  .feat-name {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    margin-bottom: 2px;
+  }
+  .feat-desc {
+    font-size: 12px; color: var(--text-2); line-height: 1.5;
+  }
+  .feat-desc em {
+    font-style: normal; font-weight: 500;
+    color: var(--text-3); font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 4px;
+  }
+
+  .feat-tag {
+    font-size: 10px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; border-radius: var(--radius-sm);
+    padding: 2px 7px; white-space: nowrap; align-self: start;
+    flex-shrink: 0;
+  }
+  .feat-row.pc .feat-tag { background: var(--claude-bg); color: var(--claude); border: 1px solid var(--claude-bd); }
+  .feat-row.pm .feat-tag { background: var(--ms-bg);     color: var(--ms);     border: 1px solid var(--ms-bd); }
+  .feat-row.ps .feat-tag { background: var(--shared-bg); color: var(--shared); border: 1px solid var(--shared-bd); }
+
+  .feat-sub-tag {
+    font-size: 10px; color: var(--text-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px 7px; white-space: nowrap; align-self: start;
+    flex-shrink: 0; background: var(--surface);
+  }
+
+  /* ── EMPTY STATE ──────────────────────────────── */
+  .empty {
+    text-align: center; padding: 48px 24px;
+    color: var(--text-3); font-size: 14px;
+    display: none;
+  }
+  .empty.visible { display: block; }
+
+  /* ── FOOTER ───────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 24px;
+    text-align: center;
+    font-size: 11px; color: var(--text-3);
+  }
+  footer a { color: var(--text-2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── RESPONSIVE ───────────────────────────────── */
+  @media (max-width: 600px) {
+    .stats { gap: 8px; }
+    .stat-chip { padding: 6px 10px; }
+    .feat-row { grid-template-columns: 14px 1fr auto; }
+    .feat-sub-tag { display: none; }
+    .toolbar-inner { gap: 8px; }
+  }
+
+  @media print {
+    .toolbar { position: static; }
+    .feat-row:hover { background: transparent; border-color: transparent; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ─────────────────────────────── -->
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">CoworkAthon 2026 · Feature Reference</p>
+    <h1>AI Cowork — Claude &amp; M365 Copilot</h1>
+    <p class="hero-sub">Tổng hợp đầy đủ tính năng của hai nền tảng AI Cowork hàng đầu</p>
+
+    <div class="dna-wrap">
+      <p class="dna-label">Phân bổ tính năng theo nền tảng</p>
+      <div class="dna-bar" id="dnaBar">
+        <!-- filled by JS -->
+      </div>
+      <div class="dna-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--claude-dot)"></div>Claude Cowork</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--shared-dot)"></div>Cả hai nền tảng</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--ms-dot)"></div>M365 Copilot</div>
+      </div>
+    </div>
+
+    <div class="stats" id="statsBar">
+      <div class="stat-chip t">
+        <div class="stat-num" id="cntTotal">—</div>
+        <div class="stat-lbl">Tổng tính năng</div>
+      </div>
+      <div class="stat-chip c">
+        <div class="stat-num" id="cntClaude">—</div>
+        <div class="stat-lbl">Claude<br>Cowork</div>
+      </div>
+      <div class="stat-chip s">
+        <div class="stat-num" id="cntShared">—</div>
+        <div class="stat-lbl">Cả hai<br>nền tảng</div>
+      </div>
+      <div class="stat-chip m">
+        <div class="stat-num" id="cntMs">—</div>
+        <div class="stat-lbl">M365<br>Copilot</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ── TOOLBAR ───────────────────────────── -->
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="filter-group">
+      <button class="filter-btn active all" data-filter="all">Tất cả</button>
+      <button class="filter-btn fc"         data-filter="claude">Claude</button>
+      <button class="filter-btn fs"         data-filter="shared">Cả hai</button>
+      <button class="filter-btn fm"         data-filter="ms">M365</button>
+    </div>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-inp" type="search" id="searchInp" placeholder="Tìm tính năng…" autocomplete="off">
+    </div>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+</div>
+
+<!-- ── CONTENT ───────────────────────────── -->
+<main class="main" id="mainContent">
+  <div class="empty" id="emptyState">Không tìm thấy tính năng phù hợp.</div>
+</main>
+
+<footer>
+  Tổng hợp tính năng tính đến tháng 7/2026 · Dành cho CoworkAthon 2026
+  · <a href="https://www.anthropic.com" target="_blank">Anthropic Claude</a>
+  · <a href="https://www.microsoft.com/microsoft-365/copilot" target="_blank">Microsoft 365 Copilot</a>
+</footer>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const FEATURES = [
+
+  // ━━━ 1. TỰ ĐỘNG HÓA & AGENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'automation', platform:'claude',
+    name: 'Local filesystem access',
+    desc: 'Đọc, ghi, đổi tên và sắp xếp file/folder trực tiếp trên máy tính — không cần upload. Có approval gate trước mỗi thao tác ghi.',
+    tag: 'Claude only', sub: 'Desktop agent' },
+
+  { cat:'automation', platform:'claude',
+    name: 'Computer use — điều khiển màn hình',
+    desc: 'Chụp screenshot, nhận biết UI elements, điều khiển chuột/bàn phím để tương tác với bất kỳ ứng dụng nào trên máy tính.',
+    tag: 'Claude only', sub: 'Desktop agent' },
+
+  { cat:'automation', platform:'claude',
+    name: 'Scheduled & autonomous tasks',
+    desc: 'Lập lịch để agent tự hoàn thành công việc khi người dùng không có mặt. Push notification khi task xong.',
+    tag: 'Claude only', sub: 'Automation' },
+
+  { cat:'automation', platform:'ms',
+    name: 'Copilot Cowork (Cloud agentic)',
+    desc: 'Tự động hóa quy trình phức tạp nhiều bước trong M365 tenant. Tự chọn AI model phù hợp cho từng sub-task. GA từ tháng 6/2026.',
+    tag: 'M365 only', sub: 'Copilot' },
+
+  { cat:'automation', platform:'ms',
+    name: 'Power Automate — NL workflow builder',
+    desc: 'Tạo quy trình duyệt tài liệu, thông báo hệ thống và tự động hóa nghiệp vụ bằng ngôn ngữ tự nhiên.',
+    tag: 'M365 only', sub: 'Power Platform' },
+
+  { cat:'automation', platform:'shared',
+    name: 'Multi-step workflow automation',
+    desc: 'Cả hai nền tảng đều hỗ trợ tự động hóa quy trình nhiều bước với human-in-the-loop approval gates.',
+    tag: 'Cả hai', sub: 'Core' },
+
+  // ━━━ 2. TÀI LIỆU & NỘI DUNG ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'documents', platform:'claude',
+    name: 'Skills — xử lý office formats gốc',
+    desc: 'Xử lý native <em>docx</em> <em>xlsx</em> <em>pptx</em> <em>pdf</em> — merge, split, fill form, giữ nguyên layout mà không cần convert sang text.',
+    tag: 'Claude only', sub: 'Skills' },
+
+  { cat:'documents', platform:'ms',
+    name: 'Copilot in Word',
+    desc: 'Soạn thảo, rewrite, tóm tắt tài liệu ngay trong Word. Draft từ prompt, chỉnh giọng văn, so sánh phiên bản.',
+    tag: 'M365 only', sub: 'Office apps' },
+
+  { cat:'documents', platform:'ms',
+    name: 'Copilot in PowerPoint',
+    desc: 'Tạo bộ slide từ outline, document Word hoặc prompt. Redesign layout, tóm tắt nội dung slide, thêm ảnh AI.',
+    tag: 'M365 only', sub: 'Office apps' },
+
+  { cat:'documents', platform:'ms',
+    name: 'Copilot Notebooks',
+    desc: 'Tổ chức chat, output và tài liệu tham chiếu theo project, đồng bộ với OneNote. Tương tự Projects của Claude nhưng trong M365.',
+    tag: 'M365 only', sub: 'Copilot' },
+
+  { cat:'documents', platform:'shared',
+    name: 'Document creation & summarization',
+    desc: 'Tạo báo cáo, tóm tắt, phân tích từ nhiều nguồn dữ liệu (file đính kèm, web search, email, ghi chú…)',
+    tag: 'Cả hai', sub: 'Core' },
+
+  { cat:'documents', platform:'shared',
+    name: 'File attachment support',
+    desc: 'Upload và xử lý file đính kèm: PDF, hình ảnh, tài liệu Word/Excel. Trích xuất, phân tích, trả lời câu hỏi từ nội dung file.',
+    tag: 'Cả hai', sub: 'Core' },
+
+  // ━━━ 3. TÌM KIẾM & NGHIÊN CỨU ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'search', platform:'ms',
+    name: 'Researcher Agent',
+    desc: 'Nghiên cứu chuyên sâu, tổng hợp báo cáo có cấu trúc từ dữ liệu nội bộ M365 + nguồn web. Cite rõ nguồn.',
+    tag: 'M365 only', sub: 'Agent' },
+
+  { cat:'search', platform:'ms',
+    name: 'Work IQ — org context (Microsoft Graph)',
+    desc: 'Hiểu bối cảnh làm việc từ email, chat Teams, SharePoint, OneDrive để cá nhân hóa kết quả. Biết ai là stakeholder, dự án nào liên quan.',
+    tag: 'M365 only', sub: 'Microsoft Graph' },
+
+  { cat:'search', platform:'shared',
+    name: 'Real-time web search',
+    desc: 'Tìm kiếm thông tin real-time từ internet, tổng hợp kết quả và cite nguồn rõ ràng trong câu trả lời.',
+    tag: 'Cả hai', sub: 'Core' },
+
+  // ━━━ 4. TÍCH HỢP & KẾT NỐI ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'integrations', platform:'claude',
+    name: 'MCP connector ecosystem',
+    desc: 'Hàng trăm connector sẵn có: AWS, n8n, Honeycomb, Fellow.ai, Jira, GitHub, Slack… Có thể tự xây custom MCP server.',
+    tag: 'Claude only', sub: 'MCP' },
+
+  { cat:'integrations', platform:'claude',
+    name: 'Claude in Chrome (browser agent)',
+    desc: 'Extension điều khiển tab trình duyệt: scrape web, điền form, thu thập data từ bất kỳ trang nào mà không cần API.',
+    tag: 'Claude only', sub: 'Browser' },
+
+  { cat:'integrations', platform:'ms',
+    name: 'Copilot Studio — custom agent builder',
+    desc: 'Xây dựng AI agent tùy chỉnh cho tổ chức mà không cần code. Plugin ngành: FactSet, S&P, LSEG, Apollo, SAP…',
+    tag: 'M365 only', sub: 'Power Platform' },
+
+  { cat:'integrations', platform:'ms',
+    name: 'Native SharePoint / OneDrive',
+    desc: 'Đọc/ghi tài liệu trực tiếp từ M365 cloud storage. Copilot hiểu cấu trúc thư mục, phân quyền và metadata của tổ chức.',
+    tag: 'M365 only', sub: 'M365 Storage' },
+
+  { cat:'integrations', platform:'ms',
+    name: 'Copilot in Outlook',
+    desc: 'Draft email, tóm tắt thread dài, lên lịch meeting từ nội dung email, chuẩn bị trả lời dựa trên context M365.',
+    tag: 'M365 only', sub: 'Office apps' },
+
+  { cat:'integrations', platform:'shared',
+    name: 'API access & SDK',
+    desc: 'Cả hai đều có API để tích hợp vào ứng dụng bên thứ ba. Claude API (Anthropic SDK) và M365 Copilot extensibility platform.',
+    tag: 'Cả hai', sub: 'Platform' },
+
+  // ━━━ 5. CỘNG TÁC & GIAO TIẾP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'collaboration', platform:'claude',
+    name: 'Mobile pairing',
+    desc: 'Giao việc từ điện thoại, Claude hoàn thành workflow trên desktop và push kết quả về mobile qua notification.',
+    tag: 'Claude only', sub: 'Mobile' },
+
+  { cat:'collaboration', platform:'ms',
+    name: 'Teams meeting summaries',
+    desc: 'Tự động tóm tắt nội dung cuộc họp Teams: quyết định, action items, transcription. Không cần ghi chép thủ công.',
+    tag: 'M365 only', sub: 'Teams' },
+
+  { cat:'collaboration', platform:'ms',
+    name: 'Apple CarPlay integration',
+    desc: 'Truy cập Copilot rảnh tay khi lái xe: xem lịch hôm nay, ưu tiên nhiệm vụ, trả lời email bằng giọng nói.',
+    tag: 'M365 only', sub: 'Mobile' },
+
+  { cat:'collaboration', platform:'shared',
+    name: 'Conversational chat interface',
+    desc: 'Giao tiếp tự nhiên bằng ngôn ngữ tự nhiên (tiếng Việt, Nhật, Anh…), hỏi follow-up, đính kèm context trong cuộc hội thoại.',
+    tag: 'Cả hai', sub: 'Core' },
+
+  // ━━━ 6. PHÂN TÍCH DỮ LIỆU ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'analytics', platform:'ms',
+    name: 'Analyst Agent',
+    desc: 'Phân tích dữ liệu không cần chuyên môn SQL hay Python. Kết nối Power BI, Dataverse, Fabric. Sinh chart và insight narrative.',
+    tag: 'M365 only', sub: 'Agent' },
+
+  { cat:'analytics', platform:'ms',
+    name: 'Copilot in Excel',
+    desc: 'Phân tích dataset, đề xuất công thức, tạo PivotTable và chart bằng ngôn ngữ tự nhiên. Giải thích dữ liệu cho người không chuyên.',
+    tag: 'M365 only', sub: 'Office apps' },
+
+  { cat:'analytics', platform:'shared',
+    name: 'Code execution (data analysis)',
+    desc: 'Chạy Python/R trong sandbox để phân tích dữ liệu, vẽ biểu đồ và xuất kết quả. Claude Code Execution + M365 Copilot Analyst.',
+    tag: 'Cả hai', sub: 'Analytics' },
+
+  // ━━━ 7. TẠO NỘI DUNG PHONG PHÚ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'content', platform:'ms',
+    name: 'Image generation & editing (Designer)',
+    desc: 'Tạo và chỉnh ảnh AI với Microsoft Designer tích hợp. Hiệu ứng Scatter, tạo ảnh ngay trong workflow M365.',
+    tag: 'M365 only', sub: 'Content' },
+
+  { cat:'content', platform:'ms',
+    name: 'Photos Agent (OneDrive)',
+    desc: 'Tìm kiếm, quản lý và tương tác với ảnh lưu trên OneDrive ngay trong Copilot. Nhận dạng nội dung, tạo album.',
+    tag: 'M365 only', sub: 'Agent' },
+
+  { cat:'content', platform:'shared',
+    name: 'Long-form writing & editing',
+    desc: 'Viết báo cáo dài, bài blog, email, tài liệu kỹ thuật. Chỉnh sửa giọng văn, tone, format. Dịch thuật đa ngôn ngữ.',
+    tag: 'Cả hai', sub: 'Core' },
+
+  // ━━━ 8. LẬP TRÌNH & DEV ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'dev', platform:'claude',
+    name: 'Claude Code — agentic CLI coding',
+    desc: 'Command-line tool cho coding agent: đọc codebase, viết code, chạy tests, commit. Tích hợp terminal trực tiếp.',
+    tag: 'Claude only', sub: 'Dev tool' },
+
+  { cat:'dev', platform:'claude',
+    name: 'Claude in Excel / PowerPoint (agent)',
+    desc: 'Agent tích hợp trong Excel và PowerPoint: viết macro, phân tích, sinh nội dung slide theo context từ files.',
+    tag: 'Claude only', sub: 'Office agent' },
+
+  { cat:'dev', platform:'shared',
+    name: 'Code assistance (write, review, explain)',
+    desc: 'Viết code từ spec, review pull request, giải thích logic phức tạp, generate tests, debug lỗi. Hỗ trợ mọi ngôn ngữ.',
+    tag: 'Cả hai', sub: 'Core' },
+
+  // ━━━ 9. NỀN TẢNG & HỆ SINH THÁI ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'platform', platform:'claude',
+    name: 'Projects — persistent workspace memory',
+    desc: 'Persistent context, file references và lịch sử kết quả xuyên suốt sessions. Không phải restart context mỗi lần.',
+    tag: 'Claude only', sub: 'Platform' },
+
+  { cat:'platform', platform:'claude',
+    name: 'Cowork desktop app (Mac / Windows)',
+    desc: 'Native desktop application cho agentic file & task management. Dành cho non-developers tự động hóa công việc hàng ngày.',
+    tag: 'Claude only', sub: 'Platform' },
+
+  { cat:'platform', platform:'shared',
+    name: 'Multi-model AI selection',
+    desc: 'Chọn model phù hợp theo tác vụ. Claude: Opus 4.8, Sonnet 4.6, Haiku 4.5. M365: GPT-5.5, Claude Opus 4.8 (Cowork Frontier).',
+    tag: 'Cả hai', sub: 'Platform' },
+
+  // ━━━ 10. BẢO MẬT & DOANH NGHIỆP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  { cat:'security', platform:'claude',
+    name: 'RBAC + OpenTelemetry monitoring',
+    desc: 'Kiểm soát truy cập theo vai trò. Giám sát toàn bộ hoạt động agent qua OpenTelemetry streaming, tích hợp SIEM.',
+    tag: 'Claude only', sub: 'Enterprise' },
+
+  { cat:'security', platform:'ms',
+    name: 'Microsoft Purview — DLP & compliance',
+    desc: 'Data classification, Data Loss Prevention, audit trail đầy đủ. Tuân thủ ISO 42001, GDPR. Tích hợp Microsoft Entra (IAM).',
+    tag: 'M365 only', sub: 'Enterprise' },
+
+  { cat:'security', platform:'shared',
+    name: 'Enterprise security & access control',
+    desc: 'Cả hai đều hỗ trợ SSO, audit logs, tenant isolation, và enterprise-grade data privacy theo tiêu chuẩn SOC 2 / ISO 27001.',
+    tag: 'Cả hai', sub: 'Enterprise' },
+];
+
+// ── CATEGORY METADATA ─────────────────────────────────────────────────────────
+const CATS = {
+  automation:     { name: 'Tự động hóa & Agent',       icon: '⚡' },
+  documents:      { name: 'Tài liệu & Nội dung',       icon: '📄' },
+  search:         { name: 'Tìm kiếm & Nghiên cứu',     icon: '🔍' },
+  integrations:   { name: 'Tích hợp & Kết nối',        icon: '🔌' },
+  collaboration:  { name: 'Cộng tác & Giao tiếp',      icon: '🤝' },
+  analytics:      { name: 'Phân tích dữ liệu',         icon: '📊' },
+  content:        { name: 'Tạo nội dung phong phú',    icon: '✨' },
+  dev:            { name: 'Lập trình & Developer',      icon: '💻' },
+  platform:       { name: 'Nền tảng & Hệ sinh thái',   icon: '🏗️' },
+  security:       { name: 'Bảo mật & Doanh nghiệp',   icon: '🔒' },
+};
+
+// ── BUILD DOM ─────────────────────────────────────────────────────────────────
+const main = document.getElementById('mainContent');
+const catEls = {}; // catKey → { el, rows[] }
+
+Object.keys(CATS).forEach(catKey => {
+  const meta = CATS[catKey];
+  const section = document.createElement('div');
+  section.className = 'category';
+  section.id = 'cat-' + catKey;
+
+  section.innerHTML = `
+    <div class="cat-header">
+      <div class="cat-icon">${meta.icon}</div>
+      <span class="cat-name">${meta.name}</span>
+      <span class="cat-count" id="cc-${catKey}">0</span>
+    </div>`;
+
+  const featureList = document.createElement('div');
+  featureList.className = 'feat-list';
+  section.appendChild(featureList);
+  main.appendChild(section);
+
+  catEls[catKey] = { section, featureList, rowEls: [] };
+});
+
+FEATURES.forEach(f => {
+  const div = document.createElement('div');
+  const pc = f.platform === 'claude' ? 'pc' : f.platform === 'ms' ? 'pm' : 'ps';
+  div.className = `feat-row ${pc}`;
+  div.dataset.platform = f.platform;
+  div.dataset.name = f.name.toLowerCase();
+  div.dataset.desc = f.desc.replace(/<[^>]+>/g, '').toLowerCase();
+  div.innerHTML = `
+    <div class="feat-indicator"></div>
+    <div class="feat-body">
+      <div class="feat-name">${f.name}</div>
+      <div class="feat-desc">${f.desc}</div>
+    </div>
+    <span class="feat-sub-tag">${f.sub}</span>
+    <span class="feat-tag">${f.tag}</span>
+  `;
+  catEls[f.cat].featureList.appendChild(div);
+  catEls[f.cat].rowEls.push(div);
+});
+
+// ── STATS & DNA ───────────────────────────────────────────────────────────────
+function countFeatures(filter = 'all') {
+  let total = 0, nc = 0, nm = 0, ns = 0;
+  FEATURES.forEach(f => {
+    if (filter !== 'all' && f.platform !== filter) return;
+    total++;
+    if (f.platform === 'claude') nc++;
+    else if (f.platform === 'ms') nm++;
+    else ns++;
+  });
+  return { total, nc, nm, ns };
+}
+
+function renderStats(counts) {
+  document.getElementById('cntTotal').textContent = counts.total;
+  document.getElementById('cntClaude').textContent = counts.nc;
+  document.getElementById('cntMs').textContent = counts.nm;
+  document.getElementById('cntShared').textContent = counts.ns;
+}
+
+function renderDNA(counts) {
+  const bar = document.getElementById('dnaBar');
+  const t = counts.total || 1;
+  bar.innerHTML = `
+    <div class="dna-seg dna-c" style="flex:${counts.nc}" title="Claude only: ${counts.nc}"></div>
+    <div class="dna-seg dna-s" style="flex:${counts.ns}" title="Shared: ${counts.ns}"></div>
+    <div class="dna-seg dna-m" style="flex:${counts.nm}" title="M365 only: ${counts.nm}"></div>
+  `;
+}
+
+const allCounts = countFeatures();
+renderStats(allCounts);
+renderDNA(allCounts);
+
+// ── FILTER & SEARCH ───────────────────────────────────────────────────────────
+let currentFilter = 'all';
+let currentSearch = '';
+
+function applyFilters() {
+  let visible = 0;
+  Object.keys(catEls).forEach(catKey => {
+    const { section, rowEls } = catEls[catKey];
+    let catVisible = 0;
+    rowEls.forEach(row => {
+      const pMatch =
+        currentFilter === 'all' ||
+        row.dataset.platform === currentFilter;
+      const sMatch =
+        !currentSearch ||
+        row.dataset.name.includes(currentSearch) ||
+        row.dataset.desc.includes(currentSearch);
+      const show = pMatch && sMatch;
+      row.dataset.hidden = show ? 'false' : 'true';
+      if (show) { catVisible++; visible++; }
+    });
+    section.style.display = catVisible === 0 ? 'none' : '';
+    document.getElementById('cc-' + catKey).textContent = catVisible;
+  });
+
+  document.getElementById('emptyState').classList.toggle('visible', visible === 0);
+  document.getElementById('resultCount').textContent =
+    currentSearch ? `${visible} kết quả` : '';
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    applyFilters();
+  });
+});
+
+// Search
+document.getElementById('searchInp').addEventListener('input', e => {
+  currentSearch = e.target.value.toLowerCase().trim();
+  applyFilters();
+});
+
+applyFilters();
+</script>
+</body>
+</html>
